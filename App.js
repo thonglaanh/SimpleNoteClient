@@ -5,6 +5,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import Home from './Screens/Home';
 import Splash from './Screens/Splash'
 import Notification from './Screens/Notification';
+import CreateNote from './Screens/CreateNote';
 
 const Drawer = createDrawerNavigator();
 
@@ -13,6 +14,7 @@ export default function App() {
     <NavigationContainer>
       <Drawer.Navigator initialRouteName='Spash' screenOptions={{ headerShown: false, drawerStyle: { backgroundColor: '#fff', paddingTop: 50 } }} >
         <Drawer.Screen name="Splash" component={Splash} options={{ drawerLabel: () => null }} />
+        <Drawer.Screen name="CreateNote" component={CreateNote} options={{ drawerLabel: () => null }} />
         <Drawer.Screen name="Home" component={Home} options={{
           drawerLabel: ({ focused }) => (
             <View>
