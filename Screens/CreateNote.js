@@ -1,16 +1,20 @@
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, Platform } from 'react-native';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, Platform, FlatList } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import config from '../config';
 import * as DocumentPicker from 'expo-document-picker';
 import axios from 'axios';
 import ColorPickerModal from '../Components/ColorPickerModal';
-const CreateNote = ({ navigation }) => {
+import DropDownPicker from 'react-native-dropdown-picker';
+// import DateTimePicker from 'react-native-modal-datetime-picker';
+
+const CreateNote = ({ navigation, route }) => {
+    const { categories } = route.params;
     const [title, settitle] = useState()
     const [content, setcontent] = useState()
     const [img, setimg] = useState()
     const [endDate, setendDate] = useState(new Date());
     const [color, setcolor] = useState('#F4DFCD')
-    const [category, setcategory] = useState('64abad56b4e06ffbdff84489')
+    const [category, setcategory] = useState('')
     //
     const [show, setShow] = useState(false)
     const [showColor, setShowColor] = useState(false);
@@ -18,23 +22,21 @@ const CreateNote = ({ navigation }) => {
     const handleSelectColor = (selectedColor) => {
         setcolor(selectedColor);
     };
-
     const pickImage = async () => {
         await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true }).then(res => {
-            if (res.type == 'success') {
-                let { name, size, uri } = res;
-                let nameParts = name.split('.');
-                let fileType = nameParts[nameParts.length - 1];
-                var fileToUpload = {
-                    name: name,
-                    size: size,
-                    uri: uri,
-                    type: "application/" + fileType
-                };
-                console.log(fileToUpload, '...............file')
-                setimg(fileToUpload);
-
-            }
+            let { name, size, uri } = res.assets[0];
+            let nameParts = name.split('.');
+            let fileType = nameParts[nameParts.length - 1];
+            var fileToUpload = {
+                name: name,
+                size: size,
+                uri: uri,
+                type: "application/" + fileType
+            };
+            console.log(fileToUpload, '...............file')
+            setimg(fileToUpload);
+        }).catch((err) => {
+            console.log('Error ' + err);
         })
     }
     const postNote = async () => {
@@ -42,11 +44,12 @@ const CreateNote = ({ navigation }) => {
         formData.append('title', title)
         formData.append('content', content)
         if (img) {
-            formData.append('img', img); // Nếu có hình ảnh được chọn, thêm nó vào formData
+            formData.append('img', img);
         }
         formData.append('color', color)
         formData.append('category', category)
         formData.append('endDate', endDate)
+        console.log(formData);
         try {
             console.log(formData);
             await axios.post(config.API_URL + '/note/createNote', formData, {
@@ -55,14 +58,20 @@ const CreateNote = ({ navigation }) => {
                 }
             });
 
-            console.log('Success')
+            alert('Đã thêm 1 ghi chú')
         } catch (error) {
             console.log('Error ' + error);
         }
 
     }
+    const [open, setOpen] = useState(false);
+    const [value, setValue] = useState(null);
+    const [items, setItems] = useState([]);
+    useEffect(() => {
+        setItems(categories);
+    }, [route.params])
     return (
-        <View style={{ flex: 1, padding: 20, paddingTop: 40, backgroundColor: '#fff' }}>
+        <View style={{ flex: 1, padding: 20, paddingTop: 40, backgroundColor: '#F4DFCD' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <TouchableOpacity
                     style={styles.backgroundIcon}
@@ -72,8 +81,7 @@ const CreateNote = ({ navigation }) => {
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row' }}>
                     <TouchableOpacity
-                        style={[styles.backgroundIcon, { marginHorizontal: 10 }]}
-                    >
+                        style={[styles.backgroundIcon, { marginHorizontal: 10 }]}>
                         <Image source={require('../assets/bookmark-white.png')} style={styles.icon}></Image>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.backgroundIcon} onPress={postNote}>
@@ -81,8 +89,22 @@ const CreateNote = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             </View>
+            <View style={{ marginTop: 25, marginRight: 40, flexDirection: 'row' }}>
+                <Image source={require('../assets/category.png')} style={{ width: 20, height: 20, marginTop: 15 }} />
+                <DropDownPicker
+                    items={categories.map(category => ({ label: category.name, value: category._id }))}
+                    value={category}
+                    setValue={setcategory}
+                    open={open}
+                    setOpen={setOpen}
+                    onChangeValue={(value) => { setcategory(value) }}
+                    textStyle={{ fontSize: 12 }}
+                    style={{ borderRadius: 20, backgroundColor: '#F4DFCD', borderColor: '#F4DFCD', width: 100 }}
+                    dropDownContainerStyle={{ width: 150, borderColor: '#fff', borderRadius: 10, marginTop: 5 }}
+                />
+            </View>
             <TextInput
-                style={{ fontSize: 30, fontWeight: 'bold', marginTop: 30, color: '#000' }}
+                style={{ fontSize: 30, fontWeight: 'bold', marginTop: 10, color: '#000' }}
                 placeholder="Nhập tiêu đề của bạn"
                 placeholderTextColor="gray"
                 multiline={true} //
@@ -104,7 +126,7 @@ const CreateNote = ({ navigation }) => {
                 flexDirection: 'row',
                 justifyContent: 'space-between', paddingHorizontal: 40,
                 paddingVertical: 10,
-                top: 150
+                top: 100
 
             }}>
 
@@ -142,6 +164,7 @@ const CreateNote = ({ navigation }) => {
 
                     />
                 )
+
             }
         </View >
     );
@@ -151,10 +174,10 @@ export default CreateNote;
 
 const styles = StyleSheet.create({
     backgroundIcon: {
-        backgroundColor: '#04D9D9', borderRadius: 25, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'
+        backgroundColor: '#000', borderRadius: 25, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'
     },
     icon: {
-        width: 17, height: 17, tintColor: '#000'
+        width: 17, height: 17, tintColor: '#fff'
 
     },
     centeredView: {
@@ -162,5 +185,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
+
 
 });

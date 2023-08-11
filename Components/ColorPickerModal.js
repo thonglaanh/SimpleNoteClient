@@ -6,8 +6,6 @@ const colors = ['#ffffff', '#F7CAC9', '#F3E1EB', '#FFD3B5', '#FFF2CC', '#D4F1F4'
 const ColorPickerModal = ({ visible, onSelectColor, onClose }) => {
     return (
         <Modal visible={visible} animationType="slide" transparent={true} onBackdropPress={onClose}>
-
-
             <ScrollView horizontal>
 
                 <View style={styles.modalContainer}>

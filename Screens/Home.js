@@ -7,24 +7,22 @@ import Item from '../items/Item';
 import OptionsModal from '../Components/OptionsModal';
 import { DrawerActions } from '@react-navigation/native';
 
-
 const Home = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [listNote, setListNote] = useState([]);
     const [listCategory, setListCategory] = useState([]);
     const [categoryQuery, setCategoryQuery] = useState();
     const [searchQuery, setSearchQuery] = useState();
-    const [account, setAccount] = useState();
     const [time, settime] = useState()
     const [showOption, setshowOption] = useState(false)
     const [selectedItem, setSelectedItem] = useState({})
+    const [selectedCategory, setSelectedCategory] = useState('');
 
 
     //Lấy time hiện tại
     useEffect(() => {
         const currentTime = new Date();
         const currentHour = currentTime.getHours();
-        let greeting;
         if (currentHour >= 5 && currentHour < 12) {
             settime('Chào buổi sáng')
         } else if (currentHour >= 12 && currentHour < 18) {
@@ -39,13 +37,12 @@ const Home = ({ navigation }) => {
         try {
             const response = await axios.get(config.API_URL + '/note', {
                 params: {
-                    category: categoryQuery,
+                    category: selectedCategory, // Use selected category here
                     title: searchQuery,
                 },
             });
             setLoading(true);
             setTimeout(() => {
-                setAccount(response.data.account);
                 setListCategory([{ _id: '', name: 'All' }, ...response.data.categories]);
                 setListNote(response.data.notes);
                 setLoading(false);
@@ -62,19 +59,41 @@ const Home = ({ navigation }) => {
     useEffect(() => {
         console.log(listNote);
         console.log(listCategory);
-        console.log(account);
-    }, [listCategory, listNote, account]);
+    }, [listCategory, listNote]);
+
 
     const renderCategoryItem = ({ item }) => {
         return (
             <TouchableOpacity
-                style={styles.categoryItem}
-            // onPress={() => searchCategory(item._id)}
+                style={[
+                    styles.categoryItem,
+                    selectedCategory === item._id
+                        ? styles.selectedCategory
+                        : null,
+                ]}
+                onPress={() => {
+                    searchCategory(item);
+                }}
             >
-                <Text style={styles.categoryText}>{item.name}</Text>
+                <Text
+                    style={[
+                        styles.categoryText,
+                        selectedCategory === item._id
+                            ? styles.selectedCategoryText
+                            : null,
+                    ]}>{item.name}</Text>
             </TouchableOpacity>
         );
     };
+
+
+    const searchCategory = (item) => {
+        setSelectedCategory(item._id === '' ? null : item._id);
+        fetchData();
+    };
+    useEffect(() => {
+        fetchData();
+    }, [selectedCategory]);
     //Xử lý option
     const handleLongPress = (item) => {
         setSelectedItem(item);
@@ -88,6 +107,7 @@ const Home = ({ navigation }) => {
         navigation.navigate('DetailNote', { item: selectedItem, categories: listCategory });
         setshowOption(false);
     };
+
 
     const handleDelete = async () => {
         try {
@@ -103,21 +123,21 @@ const Home = ({ navigation }) => {
     };
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#EEEEEE', paddingBottom: 15, paddingHorizontal: 15 }}>
+        <View style={{ flex: 1, backgroundColor: '#EEEEEE', paddingBottom: 15, paddingHorizontal: 17 }}>
             {!loading ? (
                 <View style={{ flex: 1 }}>
                     <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl onRefresh={fetchData} />}>
                         <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#000', marginTop: 45 }}>{time}</Text>
-                        <View style={{ flexDirection: 'row', marginTop: 10, justifyContent: 'space-between', marginRight: 15 }}>
+                        <View style={{ flexDirection: 'row', marginTop: 10, justifyContent: 'space-between', marginRight: 10 }}>
                             <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-                                <Image source={require('../assets/menu.png')} style={{ width: 35, height: 35, tintColor: '#04D9D9' }} />
+                                <Image source={require('../assets/menuuu.png')} style={{ width: 25, height: 25, tintColor: '#04D9D9', marginLeft: 10 }} />
                             </TouchableOpacity>
                             <View style={{ flexDirection: 'row' }}>
-                                <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-                                    <Image source={require('../assets/magnifying-glass.png')} style={{ width: 25, height: 25, marginRight: 20 }} />
+                                <TouchableOpacity onPress={() => navigation.navigate('Search', { item: listNote, listCategory: listCategory })}>
+                                    <Image source={require('../assets/search-interface-symbol.png')} style={{ width: 25, height: 25, marginRight: 25 }} />
                                 </TouchableOpacity>
-                                <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-                                    <Image source={require('../assets/bell.png')} style={{ width: 25, height: 25 }} />
+                                <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
+                                    <Image source={require('../assets/bell.png')} style={{ width: 26, height: 26 }} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -129,21 +149,28 @@ const Home = ({ navigation }) => {
                             renderItem={renderCategoryItem}
                         />
                         <View style={{ flexDirection: 'row' }}>
-                            <View >
-                                {
-                                    listNote.filter((_, i) => i % 2 === 0).map(item => <TouchableOpacity onPress={() => {
-                                        navigation.navigate('DetailNote', { item: selectedItem, categories: listCategory });
-                                        console.log(item);
-                                    }}
+                            <View>
+                                {listNote.filter((_, i) => i % 2 === 0).map(item => (
+                                    <TouchableOpacity
+                                        key={item._id}
+                                        onPress={() => {
+                                            navigation.navigate('DetailNote', { item: item, categories: listCategory });
+                                            console.log(item);
+                                        }}
                                         onLongPress={() => handleLongPress(item)}>
-                                        <Item item={item}></Item>
-                                    </TouchableOpacity>)
-                                }
+                                        <Item item={item} />
+                                    </TouchableOpacity>
+                                ))}
                             </View>
-                            <View >
-                                {
-                                    listNote.filter((_, i) => i % 2 !== 0).map(item => <TouchableOpacity onPress={() => navigation.navigate('DetailNote', { item: selectedItem, categories: listCategory })} onLongPress={() => handleLongPress(item)}><Item item={item}></Item></TouchableOpacity>)
-                                }
+                            <View>
+                                {listNote.filter((_, i) => i % 2 !== 0).map(item => (
+                                    <TouchableOpacity
+                                        key={item._id}
+                                        onPress={() => navigation.navigate('DetailNote', { item: item, categories: listCategory })}
+                                        onLongPress={() => handleLongPress(item)}>
+                                        <Item item={item} />
+                                    </TouchableOpacity>
+                                ))}
                             </View>
                         </View>
                     </ScrollView>
@@ -159,7 +186,7 @@ const Home = ({ navigation }) => {
                     )}
                     <TouchableOpacity
                         style={styles.floatingButton}
-                        onPress={() => navigation.navigate('CreateNote')}
+                        onPress={() => navigation.navigate('CreateNote', { categories: listCategory })}
                     >
                         <Image source={require('../assets/plus.png')} style={{ width: 30, height: 30, tintColor: 'white' }} />
                     </TouchableOpacity>
@@ -181,7 +208,7 @@ const styles = StyleSheet.create({
         paddingVertical: 5,
         borderRadius: 20,
         marginHorizontal: 7,
-        backgroundColor: '#DDDDDD'
+        backgroundColor: '#DDDDDD',
     },
     categoryText: {
         fontSize: 16,
@@ -199,4 +226,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         elevation: 5,
     },
+    selectedCategory: {
+        backgroundColor: '#04D9D9',
+    },
+    selectedCategoryText: {
+        color: '#fff',
+    }
+
 });
