@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Image, TextInput, FlatList, Text, ScrollView, RefreshControl } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Image, TextInput, FlatList, Text, ScrollView, RefreshControl, Button } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import config from '../config';
@@ -6,6 +6,8 @@ import LoadingScreen from '../Components/Loading';
 import Item from '../items/Item';
 import OptionsModal from '../Components/OptionsModal';
 import { DrawerActions } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import AddCategoryModal from '../Components/AddCategoryModal';
 
 const Home = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
@@ -17,6 +19,57 @@ const Home = ({ navigation }) => {
     const [showOption, setshowOption] = useState(false)
     const [selectedItem, setSelectedItem] = useState({})
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+    const [length, setlength] = useState(0)
+    const toggleAddModal = () => {
+        setIsAddModalVisible(!isAddModalVisible);
+    };
+
+
+    // Hàm gửi thông báo
+    const sendNotification = (note) => {
+        console.log(note.title);
+        Notifications.scheduleNotificationAsync({
+            content: {
+                title: 'Ghi chú đã hết hạn',
+                body: `Ghi chú "${note.title}" đã hết hạn`,
+            },
+            trigger: null, // Gửi ngay lập tức
+        });
+    };
+
+    useEffect(() => {
+        // Khởi tạo expo-notifications khi component được mount
+        Notifications.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowAlert: true,
+                shouldPlaySound: true,
+                shouldSetBadge: true,
+            }),
+        });
+    }, []);
+
+    useEffect(() => {
+        // Kiểm tra và gửi thông báo khi endDate đến thời gian thực
+        const checkAndSendNotifications = () => {
+            const currentDate = new Date();
+            listNote.forEach(note => {
+                const endDate = new Date(note.endDate);
+                // console.log(endDate + " --- " + currentDate);
+
+                if (Math.abs(endDate.getTime() - currentDate.getTime()) < 1000) {
+                    console.log(endDate + " --- " + currentDate);
+                    console.log("Sending notification for:", note.title);
+                    sendNotification(note);
+                }
+            });
+        };
+        // Kiểm tra và gửi thông báo mỗi 1 phút
+        const interval = setInterval(() => {
+            checkAndSendNotifications();
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [listNote]);
 
 
     //Lấy time hiện tại
@@ -45,6 +98,7 @@ const Home = ({ navigation }) => {
             setTimeout(() => {
                 setListCategory([{ _id: '', name: 'All' }, ...response.data.categories]);
                 setListNote(response.data.notes);
+                setlength(response.data.lengthNote)
                 setLoading(false);
             }, 2500);
         } catch (error) {
@@ -61,36 +115,36 @@ const Home = ({ navigation }) => {
         console.log(listCategory);
     }, [listCategory, listNote]);
 
-
+    const [isAllCategorySelected, setIsAllCategorySelected] = useState(true);
+    const searchCategory = (item) => {
+        setIsAllCategorySelected(item._id === '');
+        setSelectedCategory(item._id);
+        fetchData();
+    };
     const renderCategoryItem = ({ item }) => {
+        const isSelected = selectedCategory === item._id;
+        const isAllSelected = isAllCategorySelected && item._id === '';
         return (
             <TouchableOpacity
                 style={[
                     styles.categoryItem,
-                    selectedCategory === item._id
-                        ? styles.selectedCategory
-                        : null,
+                    isSelected || isAllSelected ? styles.selectedCategory : null,
                 ]}
                 onPress={() => {
                     searchCategory(item);
-                }}
-            >
+                }}>
                 <Text
                     style={[
                         styles.categoryText,
-                        selectedCategory === item._id
-                            ? styles.selectedCategoryText
-                            : null,
-                    ]}>{item.name}</Text>
+                        isSelected || isAllSelected ? styles.selectedCategoryText : null,
+                    ]}
+                >
+                    {item.name} {item._id == '' ? `(${length})` : null}
+                </Text>
             </TouchableOpacity>
         );
     };
 
-
-    const searchCategory = (item) => {
-        setSelectedCategory(item._id === '' ? null : item._id);
-        fetchData();
-    };
     useEffect(() => {
         fetchData();
     }, [selectedCategory]);
@@ -107,8 +161,6 @@ const Home = ({ navigation }) => {
         navigation.navigate('DetailNote', { item: selectedItem, categories: listCategory });
         setshowOption(false);
     };
-
-
     const handleDelete = async () => {
         try {
             await axios.delete(config.API_URL + '/note/deleteNote/' + selectedItem._id);
@@ -121,6 +173,7 @@ const Home = ({ navigation }) => {
         }
         setshowOption(false);
     };
+    //
 
     return (
         <View style={{ flex: 1, backgroundColor: '#EEEEEE', paddingBottom: 15, paddingHorizontal: 17 }}>
@@ -130,14 +183,17 @@ const Home = ({ navigation }) => {
                         <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#000', marginTop: 45 }}>{time}</Text>
                         <View style={{ flexDirection: 'row', marginTop: 10, justifyContent: 'space-between', marginRight: 10 }}>
                             <TouchableOpacity onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
-                                <Image source={require('../assets/menuuu.png')} style={{ width: 25, height: 25, tintColor: '#04D9D9', marginLeft: 10 }} />
+                                <Image source={require('../assets/menuuu.png')} style={{ width: 25, height: 25, tintColor: '#5271ff', marginLeft: 10 }} />
                             </TouchableOpacity>
                             <View style={{ flexDirection: 'row' }}>
                                 <TouchableOpacity onPress={() => navigation.navigate('Search', { item: listNote, listCategory: listCategory })}>
                                     <Image source={require('../assets/search-interface-symbol.png')} style={{ width: 25, height: 25, marginRight: 25 }} />
                                 </TouchableOpacity>
                                 <TouchableOpacity onPress={() => navigation.navigate('Notification')}>
-                                    <Image source={require('../assets/bell.png')} style={{ width: 26, height: 26 }} />
+                                    <Image source={require('../assets/bell.png')} style={{ width: 26, height: 26, marginRight: 25 }} />
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={toggleAddModal}>
+                                    <Image source={require('../assets/category.png')} style={{ width: 26, height: 26 }} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -174,6 +230,11 @@ const Home = ({ navigation }) => {
                             </View>
                         </View>
                     </ScrollView>
+                    {/* Các modal */}
+                    <AddCategoryModal
+                        isVisible={isAddModalVisible}
+                        onClose={toggleAddModal}
+                    />
                     {showOption && (
                         <View style={{ justifyContent: 'center', alignItems: 'center', flex: 1 }}>
                             <OptionsModal
@@ -221,13 +282,13 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: '#04D9D9',
+        backgroundColor: '#5271ff',
         justifyContent: 'center',
         alignItems: 'center',
         elevation: 5,
     },
     selectedCategory: {
-        backgroundColor: '#04D9D9',
+        backgroundColor: '#5271ff',
     },
     selectedCategoryText: {
         color: '#fff',

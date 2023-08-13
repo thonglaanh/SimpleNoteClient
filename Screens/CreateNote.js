@@ -1,11 +1,11 @@
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, Platform, FlatList } from 'react-native';
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Modal, Platform, FlatList, Button } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import config from '../config';
 import * as DocumentPicker from 'expo-document-picker';
 import axios from 'axios';
 import ColorPickerModal from '../Components/ColorPickerModal';
 import DropDownPicker from 'react-native-dropdown-picker';
-// import DateTimePicker from 'react-native-modal-datetime-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const CreateNote = ({ navigation, route }) => {
     const { categories } = route.params;
@@ -22,6 +22,20 @@ const CreateNote = ({ navigation, route }) => {
     const handleSelectColor = (selectedColor) => {
         setcolor(selectedColor);
     };
+    useEffect(() => {
+        console.log('zzzz');
+    }, [show])
+
+
+    const onChange = (event, selectedDate) => {
+        const currentDate = selectedDate || endDate;
+        setShow(Platform.OS == 'ios');
+        setendDate(currentDate.toString());
+
+        let temDate = new Date(currentDate);
+        console.log(temDate);
+
+    }
     const pickImage = async () => {
         await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true }).then(res => {
             let { name, size, uri } = res.assets[0];
@@ -58,7 +72,8 @@ const CreateNote = ({ navigation, route }) => {
                 }
             });
 
-            alert('Đã thêm 1 ghi chú')
+            alert('Đã thêm 1 ghi chú');
+
         } catch (error) {
             console.log('Error ' + error);
         }
@@ -132,7 +147,7 @@ const CreateNote = ({ navigation, route }) => {
 
                 <TouchableOpacity
                     style={[styles.backgroundIcon, { backgroundColor: 'white', width: 40, height: 40 }]}
-                    onPress={() => setShow(true)}
+                    onPress={() => { setShow(true); }}
                 >
                     <Image source={require('../assets/calendar.png')} style={[styles.icon, { tintColor: 'black' }]} />
                 </TouchableOpacity>
@@ -155,6 +170,16 @@ const CreateNote = ({ navigation, route }) => {
                     <Image source={require('../assets/send.png')} style={[styles.icon, { tintColor: 'black' }]}></Image>
                 </TouchableOpacity>
             </View>
+            {
+                show && (<DateTimePicker
+                    testID='dateTimePicker'
+                    value={endDate}
+                    mode='time'
+                    is24Hour={true}
+                    display='default'
+                    style={{ backgroundColor: 'red' }}
+                    onChange={onChange} />)
+            }
             {
                 showColor && (
                     <ColorPickerModal

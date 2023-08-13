@@ -4,9 +4,11 @@ import config from '../config';
 import * as DocumentPicker from 'expo-document-picker';
 import axios from 'axios';
 import ColorPickerModal from '../Components/ColorPickerModal';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 const DetailNote = ({ route, navigation }) => {
     const { item } = route.params;
+    const { categories } = route.params;
 
     const [title, settitle] = useState()
     const [content, setcontent] = useState()
@@ -14,7 +16,8 @@ const DetailNote = ({ route, navigation }) => {
     const [imgItem, setimgItem] = useState()
     const [endDate, setendDate] = useState(new Date(item.endDate));
     const [color, setcolor] = useState(item.color)
-    const [category, setcategory] = useState('64abad56b4e06ffbdff84489')
+    const [category, setcategory] = useState(item.category)
+    const [open, setOpen] = useState(false);
 
     //
     const [show, setShow] = useState(false)
@@ -25,7 +28,8 @@ const DetailNote = ({ route, navigation }) => {
         setcontent(item.content);
         setimgItem(item.img);
         setcolor(item.color);
-        console.log(route);
+        setcategory(item.category);
+        console.log(item.category);
     }, [route]);
 
 
@@ -101,8 +105,23 @@ const DetailNote = ({ route, navigation }) => {
                     </TouchableOpacity>
                 </View>
             </View>
+            <View style={{ marginTop: 25, marginRight: 40, flexDirection: 'row' }}>
+                <Image source={require('../assets/category.png')} style={{ width: 20, height: 20, marginTop: 15 }} />
+                <DropDownPicker
+                    items={categories.map(category => ({ label: category.name, value: category._id }))}
+                    value={category}
+                    setValue={setcategory}
+                    open={open}
+                    setOpen={setOpen}
+                    onChangeValue={(value) => { setcategory(value) }}
+                    textStyle={{ fontSize: 12 }}
+                    style={{ borderRadius: 20, backgroundColor: '#F4DFCD', borderColor: '#F4DFCD', width: 100 }}
+                    dropDownContainerStyle={{ width: 150, borderColor: '#fff', borderRadius: 10, marginTop: 5 }}
+                />
+
+            </View>
             <TextInput
-                style={{ fontSize: 30, fontWeight: 'bold', marginTop: 30, color: '#000' }}
+                style={{ fontSize: 30, fontWeight: 'bold', marginTop: 10, color: '#000' }}
                 placeholder="Nhập tiêu đề của bạn"
                 placeholderTextColor="gray"
                 multiline={true} //
@@ -110,7 +129,7 @@ const DetailNote = ({ route, navigation }) => {
                 onChangeText={(txt) => settitle(txt)}
             />
             <TextInput
-                style={{ fontSize: 18, color: '#000', marginTop: 30 }}
+                style={{ fontSize: 18, color: '#000', marginTop: 20 }}
                 placeholder="Nhập nội dung của bạn"
                 placeholderTextColor="gray"
                 multiline={true}
@@ -118,7 +137,7 @@ const DetailNote = ({ route, navigation }) => {
                 onChangeText={(txt) => setcontent(txt)}
 
             />
-            <View style={{ width: '100%', height: '40%', marginTop: 30 }}>
+            <View style={{ width: '100%', height: '40%', marginTop: 40 }}>
                 {imgItem ? (
                     <Image source={{ uri: imgItem }} style={{ resizeMode: 'cover', borderRadius: 10, width: '100%', height: '100%' }} />
                 ) : img ? (
@@ -133,7 +152,7 @@ const DetailNote = ({ route, navigation }) => {
                 flexDirection: 'row',
                 justifyContent: 'space-between', paddingHorizontal: 40,
                 paddingVertical: 10,
-                top: 150
+                top: 110
 
             }}>
 

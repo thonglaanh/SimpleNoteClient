@@ -1,6 +1,6 @@
-import { StyleSheet, View, TouchableOpacity, Image, TextInput, FlatList, Text, ScrollView, RefreshControl } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Image, TextInput, FlatList, Text, ScrollView, RefreshControl, ImageBackground } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import Item from '../items/Item';
+import ItemOther from '../items/ItemOther';
 
 const Search = ({ route, navigation }) => {
     useEffect(() => {
@@ -39,7 +39,7 @@ const Search = ({ route, navigation }) => {
 
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#EEEEEE', paddingBottom: 15, paddingHorizontal: 17 }}>
+        <ImageBackground source={require('../assets/background.jpg')} style={styles.container}>
             <Text style={{ fontWeight: 'bold', fontSize: 30, color: '#000', marginTop: 45 }}>Search</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginRight: 10, marginVertical: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -56,17 +56,17 @@ const Search = ({ route, navigation }) => {
                             </TouchableOpacity>
                         )}
                         <TouchableOpacity onPress={handleSearch}>
-                            <Text style={{ color: '#04D9D9' }}>Tìm kiếm</Text>
+                            <Text style={{ color: '#5271ff' }}>TÌM KIẾM</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-                            <Text style={{ marginLeft: 10, color: 'red' }}>Hủy</Text>
+                            <Text style={{ marginLeft: 10, color: 'red' }}>HỦY</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
             <View style={{ flexDirection: 'row' }}>
                 <View>
-                    {originalListNote.filter((_, i) => i % 2 === 0).map(item => (
+                    {originalListNote.map(item => (
                         <TouchableOpacity
                             key={item._id}
                             onPress={() => {
@@ -74,29 +74,23 @@ const Search = ({ route, navigation }) => {
                                 console.log(item);
                             }}
                             onLongPress={() => handleLongPress(item)}>
-                            <Item item={item} />
-                        </TouchableOpacity>
-                    ))}
-                </View>
-                <View>
-                    {originalListNote.filter((_, i) => i % 2 !== 0).map(item => (
-                        <TouchableOpacity
-                            key={item._id}
-                            onPress={() => navigation.navigate('DetailNote', { item: item, categories: listCategory })}
-                            onLongPress={() => handleLongPress(item)}>
-                            <Item item={item} />
+                            <ItemOther item={item} />
                         </TouchableOpacity>
                     ))}
                 </View>
             </View>
 
-        </View>
+        </ImageBackground>
     )
 }
 
 export default Search;
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1, backgroundColor: '#EEEEEE', paddingBottom: 15, paddingHorizontal: 17
+
+    },
     categoryItem: {
         marginVertical: 15,
         paddingHorizontal: 25,
@@ -131,8 +125,9 @@ const styles = StyleSheet.create({
         flex: 1,
         borderColor: 'gray',
         borderWidth: 1,
-        borderRadius: 5,
+        borderRadius: 7,
         paddingHorizontal: 10,
         marginRight: 10,
+        height: 33
     },
 })
