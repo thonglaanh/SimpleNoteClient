@@ -1,4 +1,4 @@
-import { StyleSheet, View, TouchableOpacity, Image, TextInput, FlatList, Text, ScrollView, RefreshControl, Button } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Image, TextInput, FlatList, Text, ScrollView, RefreshControl, Button, ImageBackground } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import config from '../config';
@@ -13,7 +13,7 @@ const Home = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [listNote, setListNote] = useState([]);
     const [listCategory, setListCategory] = useState([]);
-    const [categoryQuery, setCategoryQuery] = useState();
+    const [itemNotification, setItemNotification] = useState();
     const [searchQuery, setSearchQuery] = useState();
     const [time, settime] = useState()
     const [showOption, setshowOption] = useState(false)
@@ -21,6 +21,20 @@ const Home = ({ navigation }) => {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [length, setlength] = useState(0)
+
+    const postNotification = async () => {
+        try {
+            await axios.post(config.API_URL + '/notification/create', { note: itemNotification }, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+        } catch (error) {
+            console.log('Error ' + error);
+        }
+
+    }
+
     const toggleAddModal = () => {
         setIsAddModalVisible(!isAddModalVisible);
     };
@@ -33,6 +47,7 @@ const Home = ({ navigation }) => {
             content: {
                 title: 'Ghi chú đã hết hạn',
                 body: `Ghi chú "${note.title}" đã hết hạn`,
+                imgUrl: note.img
             },
             trigger: null, // Gửi ngay lập tức
         });
@@ -45,6 +60,7 @@ const Home = ({ navigation }) => {
                 shouldShowAlert: true,
                 shouldPlaySound: true,
                 shouldSetBadge: true,
+
             }),
         });
     }, []);
@@ -55,12 +71,12 @@ const Home = ({ navigation }) => {
             const currentDate = new Date();
             listNote.forEach(note => {
                 const endDate = new Date(note.endDate);
-                // console.log(endDate + " --- " + currentDate);
-
-                if (Math.abs(endDate.getTime() - currentDate.getTime()) < 1000) {
+                if (Math.abs(endDate.getTime() - currentDate.getTime()) < 500) {
                     console.log(endDate + " --- " + currentDate);
                     console.log("Sending notification for:", note.title);
                     sendNotification(note);
+                    setItemNotification(note._id);
+                    postNotification();
                 }
             });
         };
@@ -176,7 +192,7 @@ const Home = ({ navigation }) => {
     //
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#EEEEEE', paddingBottom: 15, paddingHorizontal: 17 }}>
+        <ImageBackground source={require('../assets/background.jpg')} style={styles.container}>
             {!loading ? (
                 <View style={{ flex: 1 }}>
                     <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl onRefresh={fetchData} />}>
@@ -255,14 +271,17 @@ const Home = ({ navigation }) => {
             ) : (
                 <LoadingScreen />
             )}
+        </ImageBackground>
 
-        </View>
     );
 };
 
 export default Home;
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1, backgroundColor: '#EEEEEE', paddingBottom: 15, paddingHorizontal: 17
+    },
     categoryItem: {
         marginVertical: 15,
         paddingHorizontal: 25,

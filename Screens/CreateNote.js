@@ -31,6 +31,8 @@ const CreateNote = ({ navigation, route }) => {
         const currentDate = selectedDate || endDate;
         setShow(Platform.OS == 'ios');
         setendDate(currentDate.toString());
+        setSelectedDate(currentDate);
+        setendDate(currentDate);
 
         let temDate = new Date(currentDate);
         console.log(temDate);
@@ -63,9 +65,8 @@ const CreateNote = ({ navigation, route }) => {
         formData.append('color', color)
         formData.append('category', category)
         formData.append('endDate', endDate)
-        console.log(formData);
+
         try {
-            console.log(formData);
             await axios.post(config.API_URL + '/note/createNote', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -74,11 +75,19 @@ const CreateNote = ({ navigation, route }) => {
 
             alert('Đã thêm 1 ghi chú');
 
+            // Đặt lại giá trị các state thành giá trị ban đầu hoặc rỗng
+            settitle('');
+            setcontent('');
+            setimg(null);
+            setcolor('#F4DFCD');
+            setcategory('');
+            setendDate(new Date());
+
         } catch (error) {
             console.log('Error ' + error);
         }
-
     }
+
     const [open, setOpen] = useState(false);
     const [value, setValue] = useState(null);
     const [items, setItems] = useState([]);
@@ -123,12 +132,14 @@ const CreateNote = ({ navigation, route }) => {
                 placeholder="Nhập tiêu đề của bạn"
                 placeholderTextColor="gray"
                 multiline={true} //
+                value={title}
                 onChangeText={(txt) => settitle(txt)} />
             <TextInput
                 style={{ fontSize: 18, color: '#000', marginTop: 30 }}
                 placeholder="Nhập nội dung của bạn"
                 placeholderTextColor="gray"
                 multiline={true}
+                value={content}
                 onChangeText={(txt) => setcontent(txt)}
             />
             <View style={{ width: '100%', height: '40%', marginTop: 30 }}>

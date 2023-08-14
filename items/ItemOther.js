@@ -19,7 +19,7 @@ const ItemOther = (props) => {
                 <View style={{ marginHorizontal: 10 }}>
                     <Text style={styles.noteTitle}>{props.item.title}</Text>
                     <Text style={styles.noteContent}>{props.item.content}</Text>
-                    <Text style={[styles.noteContent, { color: 'gray', fontSize: 10, marginTop: 40 }]}>{monthName}, {day} {year} at {hours}:{minutes}m</Text>
+                    <Text style={[styles.noteContent, { color: 'gray', fontSize: 10, marginTop: 28 }]}>{monthName}, {day} {year} at {hours}:{minutes}m</Text>
                 </View>
             </View>
         </TouchableOpacity>
@@ -41,21 +41,21 @@ const styles = StyleSheet.create({
         flexDirection: 'row'
     },
     itemWithImage: {
-        maxHeight: 400, // Điều chỉnh chiều cao cho item có ảnh
+        maxHeight: 100, // Điều chỉnh chiều cao cho item có ảnh
 
     },
     itemWithoutImage: {
         maxHeight: 190, // Điều chỉnh chiều cao cho item không có ảnh
     },
     noteImage: {
-        width: 120,
-        height: 120,
+        width: 90,
+        height: 90,
         borderRadius: 10,
     },
     noteTitle: {
         fontWeight: 'bold',
         fontSize: 15,
-        marginTop: 10,
+        marginTop: 2,
 
     },
     noteContent: {
