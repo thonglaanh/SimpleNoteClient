@@ -22,9 +22,10 @@ const Home = ({ navigation }) => {
     const [isAddModalVisible, setIsAddModalVisible] = useState(false);
     const [length, setlength] = useState(0)
 
-    const postNotification = async () => {
+    const postNotification = async (note) => {
+        console.log(note);
         try {
-            await axios.post(config.API_URL + '/notification/create', { note: itemNotification }, {
+            await axios.post(config.API_URL + '/notification/create', { note: note._id }, {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
@@ -51,6 +52,7 @@ const Home = ({ navigation }) => {
             },
             trigger: null, // Gửi ngay lập tức
         });
+        postNotification(note);
     };
 
     useEffect(() => {
@@ -76,7 +78,6 @@ const Home = ({ navigation }) => {
                     console.log("Sending notification for:", note.title);
                     sendNotification(note);
                     setItemNotification(note._id);
-                    postNotification();
                 }
             });
         };

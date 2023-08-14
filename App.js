@@ -16,11 +16,11 @@ export default function App() {
   return (
     <NavigationContainer>
       <Drawer.Navigator
-        initialRouteName='Spash' screenOptions={{ headerShown: false, drawerStyle: { backgroundColor: '#fff', paddingTop: 0 } }}
+        initialRouteName='Spash' screenOptions={{ headerShown: false, drawerStyle: { backgroundColor: '#E6F7F7', paddingTop: 0 } }}
         drawerContent={(props) => {
           return (
             <SafeAreaView>
-              <Image source={require('./assets/logoo.png')} style={{ width: 200, height: 150, marginLeft: 10 }} />
+              <Image source={require('./assets/simple.png')} style={{ width: 200, height: 150, marginLeft: 40, marginVertical: 15 }} />
               <DrawerItemList {...props} />
             </SafeAreaView>
           )

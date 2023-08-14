@@ -9,35 +9,52 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 const CreateNote = ({ navigation, route }) => {
     const { categories } = route.params;
-    const [title, settitle] = useState()
-    const [content, setcontent] = useState()
-    const [img, setimg] = useState()
+    const [title, settitle] = useState('');
+    const [content, setcontent] = useState('');
+    const [img, setimg] = useState(null);
     const [endDate, setendDate] = useState(new Date());
-    const [color, setcolor] = useState('#F4DFCD')
-    const [category, setcategory] = useState('')
-    //
-    const [show, setShow] = useState(false)
+    const [color, setcolor] = useState('#fff');
+    const [category, setcategory] = useState('');
     const [showColor, setShowColor] = useState(false);
+    const [showDate, setShowDate] = useState(false);
+    const [showTime, setShowTime] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedTime, setSelectedTime] = useState(new Date());
 
     const handleSelectColor = (selectedColor) => {
         setcolor(selectedColor);
     };
-    useEffect(() => {
-        console.log('zzzz');
-    }, [show])
+    const onChange = (event, selectedDateOrTime) => {
+        if (Platform.OS === 'android') {
+            setShowDate(false);
+            setShowTime(false);
+        }
+
+        if (selectedDateOrTime) {
+            if (showTime) {
+                setSelectedTime(selectedDateOrTime);
+
+                setShowDate(true);
+            } else if (showDate) {
+
+                setSelectedDate(selectedDateOrTime);
+                setShowDate(false);
+
+                const combinedDateTime = new Date(
+                    selectedDate.getFullYear(),
+                    selectedDate.getMonth(),
+                    selectedDate.getDate(),
+                    selectedTime.getHours(),
+                    selectedTime.getMinutes(),
+                    selectedTime.getSeconds()
+                );
+                setendDate(combinedDateTime);
+            }
+        }
+    };
 
 
-    const onChange = (event, selectedDate) => {
-        const currentDate = selectedDate || endDate;
-        setShow(Platform.OS == 'ios');
-        setendDate(currentDate.toString());
-        setSelectedDate(currentDate);
-        setendDate(currentDate);
 
-        let temDate = new Date(currentDate);
-        console.log(temDate);
-
-    }
     const pickImage = async () => {
         await DocumentPicker.getDocumentAsync({ type: "*/*", copyToCacheDirectory: true }).then(res => {
             let { name, size, uri } = res.assets[0];
@@ -64,7 +81,7 @@ const CreateNote = ({ navigation, route }) => {
         }
         formData.append('color', color)
         formData.append('category', category)
-        formData.append('endDate', endDate)
+        formData.append('endDate', endDate.toISOString())
 
         try {
             await axios.post(config.API_URL + '/note/createNote', formData, {
@@ -95,7 +112,7 @@ const CreateNote = ({ navigation, route }) => {
         setItems(categories);
     }, [route.params])
     return (
-        <View style={{ flex: 1, padding: 20, paddingTop: 40, backgroundColor: '#F4DFCD' }}>
+        <View style={styles.container}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <TouchableOpacity
                     style={styles.backgroundIcon}
@@ -158,7 +175,7 @@ const CreateNote = ({ navigation, route }) => {
 
                 <TouchableOpacity
                     style={[styles.backgroundIcon, { backgroundColor: 'white', width: 40, height: 40 }]}
-                    onPress={() => { setShow(true); }}
+                    onPress={() => setShowTime(true)}
                 >
                     <Image source={require('../assets/calendar.png')} style={[styles.icon, { tintColor: 'black' }]} />
                 </TouchableOpacity>
@@ -181,16 +198,25 @@ const CreateNote = ({ navigation, route }) => {
                     <Image source={require('../assets/send.png')} style={[styles.icon, { tintColor: 'black' }]}></Image>
                 </TouchableOpacity>
             </View>
-            {
-                show && (<DateTimePicker
-                    testID='dateTimePicker'
-                    value={endDate}
+            {showDate && (
+                <DateTimePicker
+                    testID='datePicker'
+                    value={selectedDate}
+                    mode='date'
+                    display='default'
+                    onChange={onChange}
+                />
+            )}
+            {showTime && (
+                <DateTimePicker
+                    testID='timePicker'
+                    value={selectedTime}
                     mode='time'
                     is24Hour={true}
                     display='default'
-                    style={{ backgroundColor: 'red' }}
-                    onChange={onChange} />)
-            }
+                    onChange={onChange}
+                />
+            )}
             {
                 showColor && (
                     <ColorPickerModal
@@ -209,6 +235,9 @@ const CreateNote = ({ navigation, route }) => {
 export default CreateNote;
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1, padding: 20, paddingTop: 40, backgroundColor: '#F4DFCD'
+    },
     backgroundIcon: {
         backgroundColor: '#000', borderRadius: 25, width: 50, height: 50, alignItems: 'center', justifyContent: 'center'
     },

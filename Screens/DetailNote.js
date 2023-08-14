@@ -5,24 +5,24 @@ import * as DocumentPicker from 'expo-document-picker';
 import axios from 'axios';
 import ColorPickerModal from '../Components/ColorPickerModal';
 import DropDownPicker from 'react-native-dropdown-picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const DetailNote = ({ route, navigation }) => {
     const { item } = route.params;
     const { categories } = route.params;
 
-    const [title, settitle] = useState()
-    const [content, setcontent] = useState()
-    const [img, setimg] = useState()
-    const [imgItem, setimgItem] = useState()
+    const [title, settitle] = useState('');
+    const [content, setcontent] = useState('');
+    const [img, setimg] = useState();
+    const [imgItem, setimgItem] = useState();
     const [endDate, setendDate] = useState(new Date(item.endDate));
-    const [color, setcolor] = useState(item.color)
-    const [category, setcategory] = useState(item.category)
+    const [color, setcolor] = useState(item.color);
+    const [category, setcategory] = useState(item.category);
     const [open, setOpen] = useState(false);
-
-    //
-    const [show, setShow] = useState(false)
+    const [show, setShow] = useState(false);
     const [showColor, setShowColor] = useState(false);
-
+    const [showTime, setShowTime] = useState(false);
+    const [selectedTime, setSelectedTime] = useState(new Date());
     useEffect(() => {
         settitle(item.title);
         setcontent(item.content);
@@ -31,6 +31,30 @@ const DetailNote = ({ route, navigation }) => {
         setcategory(item.category);
         console.log(item.category);
     }, [route]);
+
+    const onChangeDate = (event, selectedDate) => {
+        setShow(false);
+        if (selectedDate) {
+            setendDate(selectedDate);
+            setShowTime(true);
+        }
+    };
+
+    const onChangeTime = (event, selectedTime) => {
+        setShowTime(false);
+        if (selectedTime) {
+            setSelectedTime(selectedTime);
+            const combinedDateTime = new Date(
+                endDate.getFullYear(),
+                endDate.getMonth(),
+                endDate.getDate(),
+                selectedTime.getHours(),
+                selectedTime.getMinutes(),
+                selectedTime.getSeconds()
+            );
+            setendDate(combinedDateTime);
+        }
+    };
 
 
     const handleSelectColor = (selectedColor) => {
@@ -181,14 +205,25 @@ const DetailNote = ({ route, navigation }) => {
                     <Image source={require('../assets/send.png')} style={[styles.icon, { tintColor: 'black' }]}></Image>
                 </TouchableOpacity>
             </View>
-            {
-                show && (<DateTimePicker
+            {show && (
+                <DateTimePicker
                     testID='dateTimePicker'
                     value={endDate}
                     mode='date'
                     is24Hour={true}
                     display='default'
-                    onChange={onChange} />)
+                    onChange={onChangeDate}
+                />
+            )}
+            {showTime && (
+                <DateTimePicker
+                    testID='timePicker'
+                    value={selectedTime}
+                    mode='time'
+                    is24Hour={true}
+                    display='default'
+                    onChange={onChangeTime}
+                />)
             }
             {
                 showColor && (
